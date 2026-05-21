@@ -1,0 +1,155 @@
+<p-toast></p-toast>
+
+<div class="card" style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+    <h2 style="color: #1e293b; margin-top: 0;">Gestión de Reservas</h2>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <p-button label="Nueva Reserva" icon="pi pi-plus" severity="primary" (click)="abrirNuevo()"></p-button>
+    </div>
+
+    <p-table [value]="reservas" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-striped">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID Reserva</th>
+                <th>Habitación</th>
+                <th>Cliente (DNI)</th>
+                <th>Precio Pactado</th>
+                <th>Estado</th>
+                <th style="text-align: center;">Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-reserva>
+            <tr>
+                <td style="font-weight: bold; color: #3b82f6;">RES-{{reserva.id}}</td>
+                <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 600;">{{reserva.idHabitacion}}</span></td>
+                <td>{{reserva.docIdCliente}}</td>
+                <td style="font-weight: 600; color: #0f172a;">S/ {{reserva.precio | number:'1.2-2'}}</td>
+                <td>
+                    <span [ngClass]="{
+                        'bg-green-100 text-green-800': reserva.estado === 'CHECKIN', 
+                        'bg-blue-100 text-blue-800': reserva.estado === 'CONFIRMADA',
+                        'bg-gray-100 text-gray-800': reserva.estado === 'CHECKOUT',
+                        'bg-red-100 text-red-800': reserva.estado === 'ANULADA'
+                    }" style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">
+                        {{reserva.estado}}
+                    </span>
+                </td>
+                <td style="text-align: center;">
+                    <p-button icon="pi pi-pencil" severity="success" [rounded]="true" [text]="true" (click)="editarReserva(reserva)" [style]="{'margin-right': '0.5rem'}" pTooltip="Editar Reserva"></p-button>
+                    
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [text]="true" (click)="eliminarReserva(reserva.id)" [style]="{'margin-right': '0.5rem'}" pTooltip="Eliminar Reserva"></p-button>
+                    
+                    <p-button icon="pi pi-cog" severity="info" [rounded]="true" [text]="true" (click)="abrirGestion(reserva)" pTooltip="Cargar Consumos"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog [(visible)]="reservaDialog" [header]="modoEdicion ? 'Modificar Reserva' : 'Registrar Nueva Reserva'" [modal]="true" [style]="{width: '500px'}">
+    <form [formGroup]="reservaForm" class="p-fluid" style="margin-top: 15px;">
+        
+        <div class="field" style="margin-bottom: 12px;">
+            <label style="font-weight: 600; color: #475569;">Documento del Cliente</label>
+            <input type="text" pInputText formControlName="docIdCliente" placeholder="Ingrese DNI o CE" />
+        </div>
+
+        <div class="field" style="margin-bottom: 12px;">
+            <label style="font-weight: 600; color: #475569;">Nro. Habitación</label>
+            <input type="text" pInputText formControlName="idHabitacion" placeholder="Ej: 101" />
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 12px;">
+            <div style="flex: 1;">
+                <label style="font-weight: 600; color: #475569;">Fecha Entrada</label>
+                <input type="date" pInputText formControlName="fechaEntrada" />
+            </div>
+            <div style="flex: 1;">
+                <label style="font-weight: 600; color: #475569;">Fecha Salida</label>
+                <input type="date" pInputText formControlName="fechaSalida" />
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 12px;">
+            <div style="flex: 1;">
+                <label style="font-weight: 600; color: #475569;">Precio Pactado Total (S/)</label>
+                <input type="number" pInputText formControlName="precio" placeholder="0.00" />
+            </div>
+            <div style="flex: 1;">
+                <label style="font-weight: 600; color: #475569;">ID Empleado</label>
+                <input type="number" pInputText formControlName="idEmpleado" placeholder="ID del Recepcionista" />
+            </div>
+        </div>
+
+        <div class="field" style="margin-bottom: 12px;" *ngIf="modoEdicion">
+            <label style="font-weight: 600; color: #475569;">Estado de Reserva</label>
+            <select class="p-inputtext" formControlName="estado" style="padding: 0.75rem; width: 100%; border-radius: 6px;">
+                <option value="CONFIRMADA">CONFIRMADA</option>
+                <option value="CHECKIN">CHECKIN</option>
+                <option value="CHECKOUT">CHECKOUT</option>
+                <option value="ANULADA">ANULADA</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
+            <p-button label="Cancelar" icon="pi pi-times" severity="secondary" styleClass="p-button-text" (click)="ocultarDialogo()"></p-button>
+            <p-button label="Guardar Cambios" icon="pi pi-check" severity="success" (click)="guardarReserva()" [disabled]="reservaForm.invalid"></p-button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog [(visible)]="gestionDialog" [modal]="true" [style]="{width: '700px'}" 
+          [header]="reservaSeleccionada ? 'Consumos Adicionales - Habitación ' + reservaSeleccionada.idHabitacion : 'Gestión'">
+    
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0; margin-top: 10px;">
+        <h4 style="margin-top: 0; margin-bottom: 15px; color: #334155;">Añadir Consumo Extra</h4>
+        
+        <div style="display: flex; gap: 15px; align-items: flex-end;">
+            <div style="flex: 2;">
+                <label style="font-weight: 600; display: block; margin-bottom: 8px;">Servicio Solicitado</label>
+                <select class="p-inputtext" [(ngModel)]="idServicioSeleccionado" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #cbd5e1; outline: none;">
+                    <option [value]="null" disabled selected>Elija un servicio del catálogo...</option>
+                    <option *ngFor="let s of serviciosDisponibles" [value]="s.id">{{s.descripcion}}</option>
+                </select>
+            </div>
+            
+            <div style="flex: 1;">
+                <label style="font-weight: 600; display: block; margin-bottom: 8px;">Cantidad</label>
+                <input type="number" pInputText [(ngModel)]="cantidadServicio" min="1" style="width: 100%; padding: 0.75rem;" />
+            </div>
+            
+            <div>
+                <p-button label="Añadir" icon="pi pi-plus" severity="success" 
+                          [disabled]="!idServicioSeleccionado || cantidadServicio < 1"
+                          (click)="agregarServicio()"></p-button>
+            </div>
+        </div>
+    </div>
+
+    <h4 style="color: #334155; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 15px;">Consumos Realizados en la Estancia</h4>
+    <p-table [value]="serviciosConsumidos" responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-striped">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Fecha/Hora</th>
+                <th>Servicio</th>
+                <th style="text-align: center;">Cant.</th>
+                <th style="text-align: right;">Total</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-consumo>
+            <tr>
+                <td>{{consumo.fecha | date:'dd/MM/yy HH:mm'}}</td>
+                <td>{{consumo.nombre}}</td>
+                <td style="text-align: center;">{{consumo.cantidad}}</td>
+                <td style="font-weight: bold; text-align: right; color: #ef4444;">S/ {{consumo.subtotal | number:'1.2-2'}}</td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8; font-style: italic;">
+                    No hay consumos registrados en esta habitación.
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>

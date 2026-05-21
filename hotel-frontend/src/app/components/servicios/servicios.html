@@ -1,0 +1,76 @@
+<p-toast></p-toast>
+
+<div class="card">
+    <h2>Listado de Servicios Extra</h2>
+    
+    <div style="margin-bottom: 1rem;">
+        <p-button label="Nuevo Servicio" icon="pi pi-plus" severity="primary" (click)="abrirNuevo()"></p-button>
+    </div>
+
+    <p-table [value]="servicios" [paginator]="true" [rows]="5" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Precio</th> <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-servicio>
+            <tr>
+                <td>{{servicio.id}}</td>
+                <td>{{servicio.tipo}}</td>
+                <td>{{servicio.descripcion}}</td>
+                <td>{{servicio.precio | currency:'PEN':'symbol':'1.2-2'}}</td> <td>{{servicio.estado}}</td>
+                <td>
+                    <p-button icon="pi pi-pencil" severity="success" [style]="{'margin-right': '0.5rem'}" (click)="editarServicio(servicio)"></p-button>
+                    <p-button icon="pi pi-trash" severity="danger" (click)="eliminarServicio(servicio.id)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="6" style="text-align: center;">No hay servicios registrados.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+@defer {
+    <p-dialog [(visible)]="servicioDialog" [style]="{width: '450px'}" [header]="modoEdicion ? 'Editar Servicio' : 'Nuevo Servicio'" [modal]="true" styleClass="p-fluid">
+        <ng-template pTemplate="content">
+            <form [formGroup]="servicioForm">
+                <div class="field" style="margin-bottom: 1rem; margin-top: 1rem;">
+                    <label for="id">ID del Servicio</label>
+                    <input type="number" pInputText id="id" formControlName="id" required autofocus />
+                </div>
+                
+                <div class="field" style="margin-bottom: 1rem;">
+                    <label for="tipo">Tipo (Ej. SPA, LAVANDERIA)</label>
+                    <input type="text" pInputText id="tipo" formControlName="tipo" required />
+                </div>
+
+                <div class="field" style="margin-bottom: 1rem;">
+                    <label for="descripcion">Descripción</label>
+                    <input type="text" pInputText id="descripcion" formControlName="descripcion" required />
+                </div>
+
+                <div class="field" style="margin-bottom: 1rem;">
+                    <label for="precio">Precio (S/.)</label>
+                    <input type="number" pInputText id="precio" formControlName="precio" min="0" step="0.50" required />
+                </div>
+
+                <div class="field" style="margin-bottom: 1rem;">
+                    <label for="estado">Estado (ACTIVO / INACTIVO)</label>
+                    <input type="text" pInputText id="estado" formControlName="estado" required />
+                </div>
+            </form>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <p-button label="Cancelar" icon="pi pi-times" severity="danger" (click)="ocultarDialogo()"></p-button>
+            <p-button label="Guardar" icon="pi pi-check" severity="success" (click)="guardarServicio()" [disabled]="servicioForm.invalid"></p-button>
+        </ng-template>
+    </p-dialog>
+}

@@ -1,0 +1,79 @@
+<p-toast></p-toast>
+
+<div class="inventory-container">
+    
+    <div class="header-section">
+        <div>
+            <nav class="breadcrumb">Directorio > <span>Clientes</span></nav>
+            <h1>Directorio de Clientes</h1>
+            <p style="color: #64748b; margin-top: 5px;">Gestione la base de datos de titulares de reservas y clientes frecuentes.</p>
+        </div>
+        
+        <p-button label="Nuevo Cliente" icon="pi pi-user-plus" (click)="abrirNuevo()" severity="primary"></p-button>
+    </div>
+
+    <div style="margin-bottom: 1.5rem; background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px;">
+        <span class="p-input-icon-left" style="flex-grow: 1;">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" (input)="aplicarFiltroGlobal($event)" placeholder="Buscar por DNI, Nombre, Apellido o Correo..." style="width: 100%;" />
+        </span>
+        <div style="color: #64748b; font-size: 0.9rem;">
+            Total: <strong>{{clientes.length}}</strong> clientes registrados
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
+        <p-table #dt [value]="clientes" [paginator]="true" [rows]="10" [loading]="loading"
+                 [globalFilterFields]="['docId', 'nombres', 'apellidos', 'correo']"
+                 styleClass="p-datatable-sm p-datatable-striped">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 15%;">DNI / DocId</th>
+                    <th style="width: 35%;">Nombre Completo</th>
+                    <th style="width: 30%;">Correo Electrónico</th>
+                    <th style="width: 20%; text-align: center;">Acciones</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-c>
+                <tr>
+                    <td><strong>{{c.docId}}</strong></td>
+                    <td style="display: flex; align-items: center; gap: 10px;">
+                        <p-avatar [label]="c.nombres.charAt(0)" shape="circle" styleClass="bg-blue-100 text-blue-700"></p-avatar>
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b;">{{c.nombres}} {{c.apellidos}}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">{{c.nacionalidad}}</div>
+                        </div>
+                    </td>
+                    <td>{{c.correo}}</td>
+                    <td style="text-align: center;">
+                        <button pButton icon="pi pi-pencil" class="p-button-text p-button-secondary" (click)="editarCliente(c)"></button>
+                        <button pButton icon="pi pi-trash" class="p-button-text p-button-danger" (click)="eliminarCliente(c.docId)"></button>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr><td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">No se encontraron clientes que coincidan con la búsqueda.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+
+<p-dialog [(visible)]="clienteDialog" [style]="{width: '550px'}" [header]="modoEdicion ? 'Actualizar Cliente' : 'Registrar Nuevo Cliente'" [modal]="true" styleClass="p-fluid">
+    <ng-template pTemplate="content">
+        <form [formGroup]="clienteForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div class="field" style="grid-column: 1 / -1;"><label>Documento de Identidad (DNI)</label><input type="text" pInputText formControlName="docId" [readonly]="modoEdicion" /></div>
+            <div class="field"><label>Nombres</label><input type="text" pInputText formControlName="nombres" /></div>
+            <div class="field"><label>Apellidos</label><input type="text" pInputText formControlName="apellidos" /></div>
+            <div class="field" style="grid-column: 1 / -1;"><label>Correo Electrónico</label><input type="email" pInputText formControlName="correo" /></div>
+            <div class="field"><label>Nacionalidad</label><input type="text" pInputText formControlName="nacionalidad" /></div>
+            <div class="field"><label>Fecha de Nacimiento</label><input type="date" pInputText formControlName="fechaNac" /></div>
+            <div class="field" style="grid-column: 1 / -1;"><label>Sexo</label>
+                <select class="p-inputtext" formControlName="sexo"><option value="M">Masculino</option><option value="F">Femenino</option></select>
+            </div>
+        </form>
+    </ng-template>
+    <ng-template pTemplate="footer">
+        <p-button label="Cancelar" icon="pi pi-times" (click)="clienteDialog = false" styleClass="p-button-text p-button-secondary"></p-button>
+        <p-button label="Guardar Cliente" icon="pi pi-check" (click)="guardarCliente()" [disabled]="clienteForm.invalid" severity="success"></p-button>
+    </ng-template>
+</p-dialog>

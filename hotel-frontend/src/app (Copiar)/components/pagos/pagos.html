@@ -1,0 +1,132 @@
+<p-toast></p-toast>
+
+<div class="inventory-container">
+    <div class="header-section">
+        <div>
+            <nav class="breadcrumb">Finanzas > <span>Pagos y Facturación</span></nav>
+            <h1>Registro de Pagos</h1>
+            <p style="color: #64748b; margin-top: 5px;">Gestione los ingresos, cobros de reservas y flujo de caja.</p>
+        </div>
+        <p-button label="Registrar Nuevo Pago" icon="pi pi-dollar" (click)="abrirNuevoPago()" severity="success"></p-button>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom: 20px;">
+        <div class="stat-card" style="background: #10b981; color: white;">
+            <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white;"><i class="pi pi-wallet"></i></div>
+            <div class="stat-info">
+                <span class="stat-label" style="color: rgba(255,255,255,0.8);">INGRESOS TOTALES</span>
+                <span class="stat-value" style="color: white;">S/ {{stats.totalIngresos | number:'1.2-2'}}</span>
+            </div>
+        </div>
+        <div class="stat-card white">
+            <div class="stat-icon" style="background: #dcfce7; color: #16a34a;"><i class="pi pi-money-bill"></i></div>
+            <div class="stat-info"><span class="stat-label">EN EFECTIVO</span><span class="stat-value">S/ {{stats.efectivo | number:'1.2-2'}}</span></div>
+        </div>
+        <div class="stat-card white">
+            <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;"><i class="pi pi-credit-card"></i></div>
+            <div class="stat-info"><span class="stat-label">POR TARJETA</span><span class="stat-value">S/ {{stats.tarjeta | number:'1.2-2'}}</span></div>
+        </div>
+        <div class="stat-card white">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="pi pi-mobile"></i></div>
+            <div class="stat-info"><span class="stat-label">TRANSFERENCIAS</span><span class="stat-value">S/ {{stats.transferencia | number:'1.2-2'}}</span></div>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem; background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <span class="p-input-icon-left" style="width: 100%;">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" (input)="aplicarFiltroGlobal($event)" placeholder="Buscar por ID de Reserva, Método o DNI del Cliente..." style="width: 100%; max-width: 500px;" />
+        </span>
+    </div>
+
+    <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
+        <p-table #dt [value]="pagos" [paginator]="true" [rows]="10" 
+                 [globalFilterFields]="['idReserva', 'metodo', 'docIdCliente']"
+                 styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>N° Recibo</th>
+                    <th>Reserva Asociada</th>
+                    <th>DNI Cliente</th>
+                    <th>Fecha de Pago</th>
+                    <th>Método</th>
+                    <th style="text-align: right;">Monto Abonado</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-p>
+                <tr>
+                    <td><strong>#PAG-{{p.id}}</strong></td>
+                    <td><p-tag value="RES-{{p.idReserva}}" severity="secondary"></p-tag></td>
+                    <td>{{p.docIdCliente || 'N/A'}}</td>
+                    <td>{{p.fecha | date:'dd/MM/yyyy HH:mm'}}</td>
+                    <td>
+                        <p-tag [value]="p.metodo" [severity]="getMetodoColor(p.metodo)"></p-tag>
+                    </td>
+                    <td style="text-align: right; font-weight: bold; color: #0f172a;">
+                        S/ {{p.monto | number:'1.2-2'}}
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+
+<p-dialog [(visible)]="pagoDialog" header="Procesar Cobro / Facturación" [modal]="true" [style]="{width: '500px'}">
+    <form [formGroup]="pagoForm" class="p-fluid" style="margin-top: 15px;">
+        
+        <div class="field" style="margin-bottom: 15px;">
+            <label style="font-weight: 600; color: #334155;">Seleccionar Reserva Activa</label>
+            <select #selectReserva class="p-inputtext" formControlName="idReserva" (change)="onReservaChange(selectReserva.value)" style="width: 100%; margin-top: 5px;">
+                <option value="">Seleccione una reserva...</option>
+                <option *ngFor="let r of reservasActivas" [value]="r.id">
+                    RES-{{r.id}} | Hab: {{r.idHabitacion}} | Titular: {{r.cliente}}
+                </option>
+            </select>
+        </div>
+
+        <div *ngIf="estadoCuentaActual" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 1rem; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">Estado de Cuenta</h3>
+            
+            <div style="display: flex; justify-content: space-between; color: #64748b; font-size: 0.95rem; margin-bottom: 5px;">
+                <span>Costo de Hospedaje:</span>
+                <span>S/ {{estadoCuentaActual.hospedaje | number:'1.2-2'}}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #64748b; font-size: 0.95rem; margin-bottom: 5px;">
+                <span>Servicios Extra (Restaurante, etc):</span>
+                <span>S/ {{estadoCuentaActual.servicios | number:'1.2-2'}}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #22c55e; font-size: 0.95rem; margin-bottom: 10px;">
+                <span>Adelantos Pagados:</span>
+               <span>- S/ {{ (estadoCuentaActual.total_pagado || 0) | number:'1.2-2' }}</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                <span style="font-weight: 700; color: #0369a1;">SALDO PENDIENTE:</span>
+                <span style="font-weight: 800; font-size: 1.2rem; color: #0369a1;">S/ {{estadoCuentaActual.saldo | number:'1.2-2'}}</span>
+            </div>
+        </div>
+
+        <div class="field" style="margin-bottom: 15px;">
+            <label style="font-weight: 600; color: #334155;">Método de Pago</label>
+            <select class="p-inputtext" formControlName="metodo" style="width: 100%; margin-top: 5px;">
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta (Crédito/Débito)</option>
+                <option value="Transferencia">Transferencia</option>
+            </select>
+        </div>
+
+        <div class="field" style="margin-bottom: 15px;">
+            <label style="font-weight: 600; color: #334155;">Monto Recibido del Cliente (S/)</label>
+            <input type="number" pInputText formControlName="monto" (input)="calcularVuelto()" style="margin-top: 5px; font-weight: bold; font-size: 1.1rem;" />
+        </div>
+
+        <div *ngIf="vuelto > 0" style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px;">
+            <i class="pi pi-money-bill" style="margin-right: 5px;"></i> Entregar Vuelto: S/ {{vuelto | number:'1.2-2'}}
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <p-button label="Cancelar" icon="pi pi-times" severity="secondary" styleClass="p-button-text" (click)="pagoDialog = false"></p-button>
+            <p-button label="Registrar Pago" icon="pi pi-check" severity="success" (click)="guardarPago()" [disabled]="pagoForm.invalid || !estadoCuentaActual"></p-button>
+        </div>
+    </form>
+</p-dialog>

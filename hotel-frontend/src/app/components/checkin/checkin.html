@@ -1,0 +1,92 @@
+<p-toast></p-toast>
+
+<div class="inventory-container">
+    <div class="header-section">
+        <div>
+            <nav class="breadcrumb">Operaciones > <span>Check-In</span></nav>
+            <h1>Check-In de Huéspedes</h1>
+            <p style="color: #64748b; margin-top: 5px;">Seleccione una reserva confirmada para registrar el ingreso.</p>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; align-items: flex-end;">
+        
+        <div>
+            <label style="display: block; font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 5px;">Fecha de Ingreso:</label>
+            <input type="date" pInputText [(ngModel)]="fechaBusqueda" (ngModelChange)="limpiarBusqueda()" style="width: 200px;" />
+        </div>
+        
+        <div style="flex-grow: 1;">
+            <label style="display: block; font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 5px;">Búsqueda Global (Ignora la fecha):</label>
+            <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-search"></i></span>
+                <input pInputText type="text" [(ngModel)]="textoBusqueda" (ngModelChange)="aplicarFiltrosInteligentes()" placeholder="Escriba DNI, Nombre o Habitación..." />
+                <button *ngIf="textoBusqueda" type="button" pButton icon="pi pi-times" severity="secondary" (click)="limpiarBusqueda()"></button>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
+        <p-table [value]="reservasPendientes" styleClass="p-datatable-striped" [paginator]="true" [rows]="10" emptyMessage="No hay ingresos pendientes para esta búsqueda.">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 15%;">Habitación</th>
+                    <th style="width: 35%;">Titular (Cliente)</th>
+                    <th style="width: 20%;">Entrada</th>
+                    <th style="width: 20%;">Salida</th>
+                    <th style="width: 10%; text-align: center;">Acción</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-r>
+                <tr>
+                    <td><strong style="color: #0f172a;">{{r.idHabitacion}}</strong></td>
+                    <td>
+                        <div style="font-weight: 600;">{{r.cliente}}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">DNI: {{r.docIdCliente}}</div>
+                    </td>
+                    <td>{{r.fechaEntrada | date:'dd/MM/yyyy'}}</td>
+                    <td>{{r.fechaSalida | date:'dd/MM/yyyy'}}</td>
+                    <td style="text-align: center;">
+                        <button pButton label="Ingreso" icon="pi pi-sign-in" (click)='abrirCheckin(r)' class="p-button-sm p-button-success"></button>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+
+<p-dialog [(visible)]="checkinDialog" [header]="'Check-In: Habitación ' + reservaSeleccionada?.idHabitacion" [modal]="true" [style]="{width: '500px'}">
+    <div class="p-fluid">
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+            <div style="font-size: 0.9rem; color: #64748b;">Titular de la Reserva:</div>
+            <div style="font-weight: bold; font-size: 1.1rem; color: #0f172a;">{{reservaSeleccionada?.cliente}}</div>
+            <div style="font-size: 0.85rem; color: #64748b;">DNI: {{reservaSeleccionada?.docIdCliente}}</div>
+        </div>
+
+        <label style="font-weight: bold; color: #0f172a;">Registrar Acompañantes</label>
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 2px; margin-bottom: 10px;">Ingrese el DNI de los huéspedes adicionales.</p>
+        
+        <div class="p-inputgroup" style="margin-bottom: 20px;">
+            <input type="text" pInputText [(ngModel)]="nuevoHuespedDni" placeholder="Ej: 70000000..." />
+            <button type="button" pButton icon="pi pi-plus" (click)="agregarAcompanante()" severity="success"></button>
+        </div>
+
+        <div style="max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 6px;">
+            <div *ngIf="huespedesActuales.length === 0" style="padding: 15px; text-align: center; color: #64748b; font-size: 0.9rem;">
+                Sin acompañantes registrados.
+            </div>
+            <div *ngFor="let h of huespedesActuales" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                <div>
+                    <div style="font-weight: 500;">{{h.nombres}} {{h.apellidos}}</div>
+                    <small style="color: #64748b;">DNI: {{h.docId}}</small>
+                </div>
+                <i class="pi pi-user" style="color: #94a3b8;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <ng-template pTemplate="footer">
+        <p-button label="Cancelar" (click)="checkinDialog = false" styleClass="p-button-text p-button-secondary"></p-button>
+        <p-button label="Finalizar Ingreso" icon="pi pi-check" (click)="confirmarCheckIn()" severity="primary"></p-button>
+    </ng-template>
+</p-dialog>
