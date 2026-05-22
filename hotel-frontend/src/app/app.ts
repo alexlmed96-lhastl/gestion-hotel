@@ -16,10 +16,11 @@ export class App implements OnInit {
     this.items = [
       { label: 'Inicio', icon: 'pi pi-home', routerLink: '/' },
       { label: 'Habitaciones', icon: 'pi pi-key', routerLink: '/habitaciones' },
+      { label: 'Gestión Hab.',  icon: 'pi pi-building',   routerLink: '/gestion-habitaciones' }, // ← nueva línea
       { label: 'Clientes', icon: 'pi pi-users', routerLink: '/personas' },
       { label: 'Servicios', icon: 'pi pi-briefcase', routerLink: '/servicios' },
       { label: 'Reservas', icon: 'pi pi-calendar', routerLink: '/reservas' },
-      { label: 'Check-In', icon: 'pi pi-sign-in', routerLink: '/checkin' },
+      //{ label: 'Check-In', icon: 'pi pi-sign-in', routerLink: '/checkin' },
       { label: 'Pagos', icon: 'pi pi-dollar', routerLink: '/pagos' }
     ];
   }

@@ -1,34 +1,39 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Habitacion } from '../models/habitacion.model';
+import { Habitacion, Sucursal } from '../models/habitacion.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class HabitacionService {
-  private apiUrl = 'http://localhost:4000/api/habitaciones'; 
+  private apiUrl = 'http://localhost:4000/api/habitaciones';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getHabitaciones(): Observable<Habitacion[]> {
     return this.http.get<Habitacion[]>(this.apiUrl);
   }
 
-  crearHabitacion(habitacion: Habitacion): Observable<Habitacion> {
-    return this.http.post<Habitacion>(this.apiUrl, habitacion);
+  getById(id: string): Observable<Habitacion> {
+    return this.http.get<Habitacion>(`${this.apiUrl}/${id}`);
   }
 
-  actualizarHabitacion(id: string | number, habitacion: Habitacion): Observable<Habitacion> {
-  return this.http.put<Habitacion>(`${this.apiUrl}/${id}`, habitacion);
-}
+  getSucursales(): Observable<Sucursal[]> {
+    return this.http.get<Sucursal[]>(`${this.apiUrl}/sucursales`);
+  }
 
-eliminarHabitacion(id: string | number): Observable<any> {
-  return this.http.delete(`${this.apiUrl}/${id}`);
-}
-// AHORA SÍ: Usamos PATCH para coincidir exactamente con tu backend
+  crearHabitacion(habitacion: Habitacion): Observable<any> {
+    return this.http.post(this.apiUrl, habitacion);
+  }
+
+  actualizarHabitacion(id: string, habitacion: Habitacion): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, habitacion);
+  }
+
+  eliminarHabitacion(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
   changeEstado(id: string, estado: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/estado`, { estado: estado });
+    return this.http.patch(`${this.apiUrl}/${id}/estado`, { estado });
   }
-  
 }

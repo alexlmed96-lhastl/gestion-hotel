@@ -1,0 +1,252 @@
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="gestion-container">
+
+  <!-- ══ CABECERA ══ -->
+  <div class="page-header">
+    <div class="header-left">
+      <nav class="breadcrumb">Administración › <span>Habitaciones</span></nav>
+      <h1 class="page-title">
+        <i class="pi pi-building"></i>
+        Gestión de Habitaciones
+      </h1>
+      <p class="page-subtitle">Crea, edita y administra el inventario de habitaciones por sucursal.</p>
+    </div>
+    <button pButton type="button" icon="pi pi-plus" label="Nueva habitación"
+            class="btn-primary-action" (click)="abrirNueva()">
+    </button>
+  </div>
+
+  <!-- ══ STATS ══ -->
+  <div class="stats-row">
+    <div class="stat-chip total">
+      <i class="pi pi-th-large"></i>
+      <div><span class="stat-num">{{ stats.total }}</span><span class="stat-lbl">Total</span></div>
+    </div>
+    <div class="stat-chip disponible">
+      <i class="pi pi-check-circle"></i>
+      <div><span class="stat-num">{{ stats.disponibles }}</span><span class="stat-lbl">Disponibles</span></div>
+    </div>
+    <div class="stat-chip ocupada">
+      <i class="pi pi-lock"></i>
+      <div><span class="stat-num">{{ stats.ocupadas }}</span><span class="stat-lbl">Ocupadas</span></div>
+    </div>
+    <div class="stat-chip mantenimiento">
+      <i class="pi pi-wrench"></i>
+      <div><span class="stat-num">{{ stats.mantenimiento }}</span><span class="stat-lbl">Mantenimiento</span></div>
+    </div>
+  </div>
+
+  <!-- ══ FILTROS ══ -->
+  <div class="filters-bar">
+    <div class="search-wrapper">
+      <i class="pi pi-search search-icon"></i>
+      <input type="text" class="search-input" placeholder="Buscar por ID, tipo o sucursal…"
+             [(ngModel)]="filtroBusqueda" (ngModelChange)="aplicarFiltros()" />
+      <button *ngIf="filtroBusqueda" type="button" class="btn-clear-search"
+              (click)="filtroBusqueda=''; aplicarFiltros()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <select class="filter-select" [(ngModel)]="filtroSucursal" (change)="aplicarFiltros()">
+      <option value="">Todas las sucursales</option>
+      <option *ngFor="let s of sucursales" [value]="s.id">{{ s.nombre }}</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="filtroTipo" (change)="aplicarFiltros()">
+      <option value="">Todos los tipos</option>
+      <option *ngFor="let t of tiposHabitacion" [value]="t.value">{{ t.icono }} {{ t.label }}</option>
+    </select>
+
+    <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">
+      <i class="pi pi-filter-slash"></i> Limpiar
+    </button>
+  </div>
+
+  <!-- ══ TABLA ══ -->
+  <div class="table-wrapper">
+
+    <div *ngIf="cargando" class="loading-state">
+      <i class="pi pi-spin pi-spinner" style="font-size:2rem;"></i>
+      <p>Cargando habitaciones…</p>
+    </div>
+
+    <div *ngIf="!cargando && habitacionesFiltradas.length === 0" class="empty-state">
+      <i class="pi pi-inbox"></i>
+      <p>No hay habitaciones con los filtros aplicados.</p>
+      <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+    </div>
+
+    <table *ngIf="!cargando && habitacionesFiltradas.length > 0" class="hab-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tipo</th>
+          <th>Piso</th>
+          <th>Camas</th>
+          <th>Precio / noche</th>
+          <th>Sucursal</th>
+          <th>Estado</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of habitacionesFiltradas" class="hab-row">
+          <td><span class="room-id">{{ h.id }}</span></td>
+          <td>
+            <div class="tipo-cell">
+              <span class="tipo-icono">{{ getIconoTipo(h.tipo) }}</span>
+              <span>{{ h.tipo }}</span>
+            </div>
+          </td>
+          <td><span class="piso-badge">Piso {{ h.piso }}</span></td>
+          <td>
+  <div class="camas-cell">
+    <span *ngFor="let c of [].constructor(h.camas)" class="cama-dot"></span>
+    <span class="camas-num">{{ h.camas }}</span>
+  </div>
+</td>
+          <td><span class="precio-cell">${{ h.precioNoche | number:'1.2-2' }}</span></td>
+          <td>
+            <span class="sucursal-label">
+              <i class="pi pi-map-marker"></i> {{ h.sucursal }}
+            </span>
+          </td>
+          <td>
+            <p-tag [value]="h.estado ?? 'SIN ESTADO'"
+                   [severity]="getSeverity(h.estado)"
+                   [style]="{'font-size':'0.75rem'}">
+            </p-tag>
+          </td>
+          <td class="col-actions">
+            <div class="actions-cell">
+              <button pButton type="button" icon="pi pi-pencil"
+                      class="p-button-text p-button-sm btn-edit"
+                      title="Editar"
+                      (click)="abrirEditar(h)">
+              </button>
+              <button pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm btn-delete"
+                      title="Eliminar"
+                      (click)="confirmarEliminar(h)">
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!cargando && habitacionesFiltradas.length > 0" class="table-footer">
+      Mostrando <strong>{{ habitacionesFiltradas.length }}</strong>
+      de <strong>{{ habitaciones.length }}</strong> habitaciones
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     DIALOG: CREAR / EDITAR
+══════════════════════════════════════════ -->
+<p-dialog [(visible)]="dialogVisible"
+          [header]="modoEdicion ? 'Editar habitación' : 'Nueva habitación'"
+          [modal]="true"
+          [style]="{width:'560px'}"
+          [draggable]="false"
+          styleClass="hab-dialog">
+
+  <ng-template pTemplate="content">
+    <form [formGroup]="form" class="hab-form">
+
+      <!-- ID -->
+      <div class="form-field" [class.field-error]="esInvalido('id')">
+        <label class="form-label">
+          Número de habitación <span class="required">*</span>
+          <span class="label-hint">Formato H101, H202…</span>
+        </label>
+        <input type="text" pInputText formControlName="id"
+               placeholder="Ej: H301" style="text-transform:uppercase"
+               [attr.readonly]="modoEdicion || null" />
+        <small *ngIf="esInvalido('id')" class="error-msg">
+          Requerido. Ejemplo: H101 o H1020
+        </small>
+      </div>
+
+      <!-- TIPO + SUCURSAL -->
+      <div class="form-row">
+        <div class="form-field" [class.field-error]="esInvalido('tipo')">
+          <label class="form-label">Tipo <span class="required">*</span></label>
+          <select class="form-select" formControlName="tipo" (change)="aplicarDefaults()">
+            <option *ngFor="let t of tiposHabitacion" [value]="t.value">
+              {{ t.icono }} {{ t.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-field" [class.field-error]="esInvalido('idSucursal')">
+          <label class="form-label">Sucursal <span class="required">*</span></label>
+          <select class="form-select" formControlName="idSucursal">
+            <option value="">-- Selecciona --</option>
+            <option *ngFor="let s of sucursales" [value]="s.id">{{ s.nombre }}</option>
+          </select>
+          <small *ngIf="esInvalido('idSucursal')" class="error-msg">Selecciona una sucursal</small>
+        </div>
+      </div>
+
+      <!-- PISO + CAMAS -->
+      <div class="form-row">
+        <div class="form-field" [class.field-error]="esInvalido('piso')">
+          <label class="form-label">Piso <span class="required">*</span></label>
+          <input type="number" pInputText formControlName="piso" min="1" max="50" />
+          <small *ngIf="esInvalido('piso')" class="error-msg">Entre 1 y 50</small>
+        </div>
+
+        <div class="form-field" [class.field-error]="esInvalido('camas')">
+          <label class="form-label">N.º de camas <span class="required">*</span></label>
+          <div class="camas-input-group">
+            <button type="button" class="camas-btn"
+                    (click)="form.patchValue({camas: (campo('camas').value || 1) - 1})"
+                    [disabled]="campo('camas').value <= 1">−</button>
+            <input type="number" pInputText formControlName="camas"
+                   min="1" max="10" style="text-align:center;width:60px;" />
+            <button type="button" class="camas-btn"
+                    (click)="form.patchValue({camas: (campo('camas').value || 1) + 1})"
+                    [disabled]="campo('camas').value >= 10">+</button>
+          </div>
+          <small *ngIf="esInvalido('camas')" class="error-msg">Entre 1 y 10 camas</small>
+        </div>
+      </div>
+
+      <!-- PRECIO -->
+      <div class="form-field" [class.field-error]="esInvalido('precioNoche')">
+        <label class="form-label">
+          Precio por noche (USD) <span class="required">*</span>
+          <button type="button" class="btn-precio-sugerido" (click)="aplicarDefaults()"
+                  title="Aplicar precio sugerido según tipo">
+            <i class="pi pi-magic"></i> Sugerir precio
+          </button>
+        </label>
+        <div class="precio-input-wrapper">
+          <span class="precio-prefix">$</span>
+          <input type="number" pInputText formControlName="precioNoche"
+                 min="0" step="0.01" style="padding-left:2rem;" />
+        </div>
+        <small *ngIf="esInvalido('precioNoche')" class="error-msg">Ingresa un precio válido (≥ 0)</small>
+      </div>
+
+    </form>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary"
+              (click)="dialogVisible = false" styleClass="p-button-outlined">
+    </p-button>
+    <p-button [label]="modoEdicion ? 'Guardar cambios' : 'Crear habitación'"
+              [icon]="modoEdicion ? 'pi pi-save' : 'pi pi-plus'"
+              severity="primary"
+              (click)="guardar()"
+              [disabled]="form.invalid">
+    </p-button>
+  </ng-template>
+</p-dialog>

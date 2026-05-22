@@ -5,6 +5,9 @@ import { ServiciosComponent } from './components/servicios/servicios';
 import { ReservasComponent } from './components/reservas/reservas';
 import { CheckinComponent } from './components/checkin/checkin'; // Ajusta la ruta a tu carpeta
 import { PagosComponent } from './components/pagos/pagos';
+import { GestionHabitacionesComponent } from './components/habitaciones/gestion-habitaciones';
+
+
 // Aquí iremos agregando PersonaComponent, etc.
 
 export const routes: Routes = [
@@ -14,7 +17,7 @@ export const routes: Routes = [
    { path: 'reservas', component: ReservasComponent },
     { path: 'checkin', component: CheckinComponent },
     { path: 'pagos', component: PagosComponent },
-  { path: '', redirectTo: '/habitaciones', pathMatch: 'full' }, // Ruta por defecto
-  
+   { path: 'gestion-habitaciones', component: GestionHabitacionesComponent },
+  { path: '', redirectTo: '/habitaciones', pathMatch: 'full' }, // Ruta por defecto  
  
 ];

@@ -469,7 +469,7 @@ export class ReservasComponent implements OnInit {
     const htmlCompleto = `
       <html>
         <head>
-          <title>Boleta de Pago - COMPUTECHA HOTEL</title>
+          <title>Boleta de Pago - HOTEL</title>
           <style>
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; }
           </style>

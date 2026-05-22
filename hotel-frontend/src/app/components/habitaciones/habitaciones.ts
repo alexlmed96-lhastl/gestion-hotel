@@ -126,28 +126,32 @@ export class HabitacionesComponent implements OnInit {
 
   procesarHabitaciones() {
     // 1. CÁLCULO DE DISPONIBILIDAD REAL
-    this.habitacionesFiltradas.forEach(h => {
-      // Buscamos si la habitación tiene una reserva activa que choque con la 'fechaConsulta'
-      const reservaActiva = this.todasLasReservas.find(r => {
-        if (r.idHabitacion !== h.id) return false;
-        if (r.estado === 'CANCELADA' || r.estado === 'FINALIZADA') return false;
-        
-        const checkIn = r.fechaEntrada ? r.fechaEntrada.split('T')[0] : '';
-        const checkOut = r.fechaSalida ? r.fechaSalida.split('T')[0] : '';
-        
-        // ¿La fecha que eligió el recepcionista está dentro de los días de esta reserva?
-        return this.fechaConsulta >= checkIn && this.fechaConsulta < checkOut;
-      });
+    // En habitaciones.ts, dentro de procesarHabitaciones()
+// Reemplaza el bloque del forEach por este:
+this.habitacionesFiltradas.forEach(h => {
+  const reservaActiva = this.todasLasReservas.find(r => {
+    if (r.idHabitacion !== h.id) return false;
+    if (r.estado === 'CANCELADA' || r.estado === 'FINALIZADA') return false;
+    const checkIn  = r.fechaEntrada ? r.fechaEntrada.split('T')[0] : '';
+    const checkOut = r.fechaSalida  ? r.fechaSalida.split('T')[0]  : '';
+    return this.fechaConsulta >= checkIn && this.fechaConsulta < checkOut;
+  });
 
-      // Sobrescribimos el estado de la BD con el Estado Real
-      if (reservaActiva) {
-        // Si el cliente ya está adentro es OCUPADA, si no ha llegado es RESERVADA
-        h.estadoVisual = reservaActiva.estado === 'CHECKIN' ? 'OCUPADA' : 'RESERVADA';
-      } else {
-        h.estadoVisual = 'DISPONIBLE'; 
-      }
-    });
-
+  if (reservaActiva) {
+    // Hay reserva activa → el estado lo manda la reserva
+    h.estadoVisual = reservaActiva.estado === 'CHECKIN' ? 'OCUPADA' : 'RESERVADA';
+  } else {
+    // Sin reserva activa → respetamos el estado real de la BD
+    const estadoBD = h.estado?.toUpperCase();
+    if (estadoBD === 'MANTENIMIENTO') {
+      h.estadoVisual = 'MANTENIMIENTO';
+    } else if (estadoBD === 'OCUPADA' || estadoBD === 'OCUPADO') {
+      h.estadoVisual = 'OCUPADA';
+    } else {
+      h.estadoVisual = 'DISPONIBLE';
+    }
+  }
+});
     // 2. TUS ESTADÍSTICAS (Ahora basadas en el estadoVisual real)
     this.stats.total = this.habitacionesFiltradas.length;
     this.stats.disponibles = this.habitacionesFiltradas.filter(h => h.estadoVisual === 'DISPONIBLE').length;
@@ -190,7 +194,8 @@ export class HabitacionesComponent implements OnInit {
       fecha: new Date().toISOString().split('T')[0],
       estado: 'CONFIRMADA',
       idHabitacion: idHabitacion,
-      precio: precioBase 
+      precio: precioBase,
+      idEmpleado: 1  // ← agrega esta línea
     });
     this.reservaDialog = true;
   }

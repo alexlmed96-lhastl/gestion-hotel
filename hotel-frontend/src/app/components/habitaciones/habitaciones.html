@@ -96,8 +96,10 @@
             </div>
             
             <div class="field"><label>Precio Total ($)</label><input type="number" pInputText formControlName="precio" /></div>
-            <div class="field"><label>ID Recepcionista</label><input type="number" pInputText formControlName="idEmpleado" /></div>
-        </form>
+<div class="field" hidden>
+  <label>ID Recepcionista</label>
+  <input type="number" pInputText formControlName="idEmpleado" />
+</div>        </form>
     </ng-template>
     <ng-template pTemplate="footer">
         <p-button label="Cancelar" icon="pi pi-times" severity="danger" (click)="reservaDialog = false" styleClass="p-button-text"></p-button>
